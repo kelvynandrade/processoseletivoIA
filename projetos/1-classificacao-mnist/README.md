@@ -1,6 +1,9 @@
 ## Relatório Técnico - Classificador de Dígitos com CNN (Edge AI)
+
 **Identificação do Candidato**
+
 **Nome completo**: Kelvyn César Ferreira de Andrade
+
 **GitHub**: https://github.com/kelvynandrade
 
 
