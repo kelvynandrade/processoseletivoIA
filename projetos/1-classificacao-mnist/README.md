@@ -51,9 +51,13 @@ A arquitetura da CNN, implementada em train_model.py, foi projetada para equilib
 **Exemplo de saída obtida no terminal durante a execução do run_inference.py sobre o conjunto de testes:**
 
 Amostra 1 -> Classe Real: 7 | Classe Predita: 7 (ACERTO)
+
 Amostra 2 -> Classe Real: 2 | Classe Predita: 2 (ACERTO)
+
 Amostra 3 -> Classe Real: 1 | Classe Predita: 1 (ACERTO)
+
 Amostra 4 -> Classe Real: 0 | Classe Predita: 0 (ACERTO)
+
 Amostra 5 -> Classe Real: 4 | Classe Predita: 4 (ACERTO)
 
 O modelo quantizado demonstrou boa robustez e precisão nas amostras avaliadas individualmente — a conversão para Edge AI não comprometeu a capacidade de distinção dos dígitos manuscritos.
