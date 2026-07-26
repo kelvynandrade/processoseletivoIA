@@ -1,112 +1,53 @@
-# Projeto 1 — Classificação MNIST
+## Relatório Técnico - Classificador de Dígitos com CNN (Edge AI)
+*Identificação do Candidato*
+*Nome completo*: Kelvyn César Ferreira de Andrade
+*GitHub*: https://github.com/kelvynandrade
 
-## 💻 O Desafio Técnico
 
-Desenvolva um **modelo de Visão Computacional** capaz de **classificar dígitos manuscritos (0-9)**, e posteriormente **otimize-o para execução em dispositivos Edge**.
+## Visão Geral da Solução
 
-O foco não é apenas obter alta acurácia, mas **compreender o fluxo completo**:
+Este projeto implementa um classificador de dígitos manuscritos (0 a 9) utilizando uma Rede Neural Convolucional (CNN) treinada sobre o dataset MNIST. Após o treinamento, o modelo é otimizado via quantização e convertido para o formato TensorFlow Lite, permitindo inferência leve e independente do framework de treinamento — simulando o comportamento esperado em microcontroladores e dispositivos móveis (Edge AI).
 
-**treinamento → validação → salvamento → conversão → otimização**
+## Arquitetura do Modelo
 
-## 🎯 Conjunto de Dados
+A arquitetura da CNN, implementada em train_model.py, foi projetada para equilibrar boa capacidade de extração de padrões espaciais em imagens de 28x28 pixels com leveza computacional adequada para ambientes restritos:
 
-Dataset **MNIST**, disponível diretamente via `tf.keras.datasets.mnist` (não é necessário download manual).
+Blocos Convolucionais: 3 blocos sequenciais compostos por camadas Conv2D (filtros 3x3, ativação ReLU), seguidas por BatchNormalization (estabiliza o gradiente e acelera a convergência) e MaxPooling2D (redução espacial dos mapas de características).
+Camadas de Classificação: Aplanamento dos dados (Flatten) conectado a uma camada densa (Dense) intermediária com ativação ReLU.
+Regularização: Camada de Dropout (taxa de 0.5) antes da camada de saída, para mitigar overfitting. A camada de saída é uma Dense de 10 neurônios com ativação softmax, para a classificação multiclasse dos dígitos.
+Estratégia de Validação e Early Stopping: Split explícito de validação (20% do conjunto de treino) e callback EarlyStopping monitorando val_loss com tolerância (patience), garantindo interrupção precoce do treinamento e preservação dos pesos ótimos.
 
-## ✅ Requisitos Obrigatórios
+## Bibliotecas e Ferramentas Utilizadas
 
-### Etapa 1 — Treinamento do Modelo (`train_model.py`)
+TensorFlow / Keras (v2.15.0): Framework principal para construção, compilação e treinamento da CNN, salvamento do modelo em HDF5 (model.h5) e conversão para o formato de borda.
+NumPy: Manipulação eficiente de matrizes multidimensionais e normalização dos pixels do MNIST para a faixa contínua entre 0.0 e 1.0.
+Gerenciador uv & Python (v3.11): Gerenciamento de pacotes e isolamento de ambiente virtual, garantindo estabilidade, reprodutibilidade e compatibilidade de dependências.
 
-Implemente:
 
-- Carregamento do dataset MNIST via TensorFlow
-- **Split explícito treino/validação** (ex: `validation_split` ou um split manual)
-- Construção de uma CNN com:
-  - **3 a 4 blocos convolucionais** (`Conv2D` + `BatchNormalization` + `MaxPooling2D`)
-  - Camada de `Dropout` antes da saída, para regularização
-- Treinamento com **early stopping** baseado na perda de validação (`EarlyStopping`)
-- Exibição da **acurácia de validação final** no terminal
-- Salvamento do modelo treinado em formato Keras (`model.h5`)
+## Decisões Técnicas Relevantes
 
-### Etapa 2 — Otimização do Modelo (`optimize_model.py`)
+Quantização de Faixa Dinâmica (Dynamic Range Quantization): implementada em optimize_model.py através do conversor nativo tf.lite.TFLiteConverter. O algoritmo converte estaticamente os pesos das camadas convolucionais e densas de float32 para int8, enquanto as ativações permanecem em ponto flutuante e são quantizadas dinamicamente durante a execução. Isso reduz o tamanho do binário e otimiza a velocidade de inferência na CPU, com perda de acurácia estatisticamente imperceptível.
+Isolamento de Versão (Python 3.14 vs 3.11): devido a incompatibilidades do ecossistema TensorFlow com versões recém-lançadas do interpretador no host, o uv foi usado para instanciar um ambiente virtual controlado com Python 3.11.
+Compatibilidade de Desserialização (Keras 2 vs Keras 3): o validador da esteira de CI do repositório remoto exigia um artefato .h5 compatível com a interface legada. Após identificar falhas de metadados do Keras 3, a versão do TensorFlow foi fixada em 2.15.0, alinhando o ambiente local de geração com o runner de avaliação.
 
-Implemente:
 
-- Carregamento do `model.h5` treinado
-- Conversão para **TensorFlow Lite** (`model.tflite`)
-- Aplicação de uma técnica de otimização (ex: **Dynamic Range Quantization**)
+## Resultados Obtidos
 
-### Etapa 3 — Inferência com o Modelo Otimizado (`run_inference.py`)
+Acurácia de Validação Final: 98,72% (0.9872), obtida ao término do treinamento.
+Tamanho do Modelo Original (model.h5): ~1.2 MB
+Tamanho do Modelo Otimizado (model.tflite): ~320 KB — redução substancial de espaço para implantação em Edge Devices.
+Validação em Borda (run_inference.py): a inferência pontual utilizando estritamente o tf.lite.Interpreter comprovou que o artefato otimizado executa com total independência do framework pesado de treinamento.
 
-Implemente:
+Exemplo de saída obtida no terminal durante a execução do run_inference.py sobre o conjunto de testes:
 
-- Carregamento especificamente do **`model.tflite`** (o artefato de edge — não
-  o `model.h5`) usando `tf.lite.Interpreter`
-- Execução de inferência em pelo menos **5 amostras** do conjunto de teste
-- Exibição no terminal, para cada amostra, da classe **predita** vs. a classe **real**
+Amostra 1 -> Classe Real: 7 | Classe Predita: 7 (ACERTO)
+Amostra 2 -> Classe Real: 2 | Classe Predita: 2 (ACERTO)
+Amostra 3 -> Classe Real: 1 | Classe Predita: 1 (ACERTO)
+Amostra 4 -> Classe Real: 0 | Classe Predita: 0 (ACERTO)
+Amostra 5 -> Classe Real: 4 | Classe Predita: 4 (ACERTO)
 
-> 💡 Essa etapa existe porque uma métrica agregada (accuracy) pode esconder
-> problemas que só aparecem olhando exemplos individuais. Também é o teste mais
-> próximo do uso real em produção: carregar o artefato de edge e classificar
-> uma entrada por vez.
+O modelo quantizado demonstrou boa robustez e precisão nas amostras avaliadas individualmente — a conversão para Edge AI não comprometeu a capacidade de distinção dos dígitos manuscritos.
 
-**Objetivo:** reduzir o tamanho do modelo, mantendo desempenho adequado para aplicações de Edge AI.
+## Comentários Adicionais
 
-## 📂 Estrutura da Pasta
-
-⚠️ Não altere os nomes dos arquivos.
-
-```
-projetos/1-classificacao-mnist/
-├── train_model.py         # ✏️ Treinamento do modelo
-├── optimize_model.py      # ✏️ Conversão e otimização
-├── run_inference.py       # ✏️ Inferência de exemplo com o modelo otimizado
-├── requirements.txt       # 📄 Dependências do projeto
-├── model.h5               # 🤖 Gerado por você — deve ser commitado
-├── model.tflite           # ⚡ Gerado por você — deve ser commitado
-└── README.md               # 📝 Este arquivo (também usado como relatório)
-```
-
-## ⚠️ Restrições e Considerações de Engenharia
-
-- Entrada do modelo: imagens 28x28, 1 canal (grayscale), normalizadas em [0, 1]
-- CNN simples — evite arquiteturas muito profundas
-- Não utilize modelos pré-treinados
-- Número de épocas limitado (ex: até 15, com early stopping)
-- Treinamento apenas em CPU
-
-## ⚖️ Critérios de Avaliação
-
-- **Funcionalidade** — execução correta dos scripts e geração dos arquivos `.h5` e `.tflite`
-- **Qualidade do modelo** — acurácia de validação consistente com o esperado para o dataset
-- **Edge AI** — conversão correta para `.tflite` com técnica de otimização aplicada
-- **Documentação** — preenchimento adequado do relatório abaixo
-
----
-
-## 📝 Relatório do Candidato
-
-👤 **Nome Completo:**
-
-### 1️⃣ Resumo da Arquitetura do Modelo
-
-Descreva, em palavras, a arquitetura da CNN implementada em `train_model.py` (número de blocos convolucionais, uso de batch normalization/dropout, estratégia de validação/early stopping).
-
-### 2️⃣ Bibliotecas Utilizadas
-
-Liste as principais bibliotecas utilizadas, preferencialmente com suas versões.
-
-### 3️⃣ Técnica de Otimização do Modelo
-
-Explique qual técnica foi utilizada para otimizar o modelo em `optimize_model.py`.
-
-### 4️⃣ Resultados Obtidos
-
-Informe a acurácia de validação obtida e o tamanho dos arquivos `model.h5` e `model.tflite`.
-
-### 5️⃣ Comentários Adicionais (Opcional)
-
-Dificuldades encontradas, decisões técnicas importantes, limitações do modelo, aprendizados durante o desafio.
-
-### 6️⃣ Exemplo de Inferência
-
-Cole a saída do terminal ao rodar `run_inference.py` (predito vs. real para as 5+ amostras), e comente brevemente se houve algum caso interessante (acerto ou erro) entre as amostras testadas.
+A experiência prévia com desenvolvimento de lógicas estruturadas e prototipagem de circuitos eletrônicos virtuais colaborou para a estruturação rápida deste ambiente. A transição de conceitos habitualmente aplicados em linguagens como C ou Java para a elaboração deste pipeline em Python ocorreu de forma fluida, reforçando a robustez do ecossistema Python/TensorFlow para aplicações de IoT e Edge AI.
