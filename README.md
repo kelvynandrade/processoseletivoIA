@@ -9,7 +9,7 @@ Esta atividade tem como objetivo avaliar competências técnicas relacionadas a 
 
 ---
 
-## 📌 Navegação Rápida
+## 📌 Navegação Rápida 
 
 - 🏁 [Passo 0 – Antes de Tudo](#-passo-0-antes-de-tudo)
 - ⚙ [Passo 1 – Preparando o Ambiente](#-passo-1-preparando-o-ambiente)
