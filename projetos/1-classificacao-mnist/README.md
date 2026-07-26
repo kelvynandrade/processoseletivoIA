@@ -26,7 +26,7 @@ A arquitetura da CNN, implementada em train_model.py, foi projetada para equilib
 
 -NumPy: Manipulação eficiente de matrizes multidimensionais e normalização dos pixels do MNIST para a faixa contínua entre 0.0 e 1.0.
 
--Gerenciador uv & Python (v3.11): Gerenciamento de pacotes e isolamento de ambiente virtual, garantindo estabilidade, reprodutibilidade e compatibilidade de dependências.
+-Gerenciador uv & Python (v3.11): Gerenciamento de pacotes e isolamento de ambiente virtual, garantindo estabilidade, reprodutibilidade e compatibilidade de dependências. 
 
 
 ## Decisões Técnicas Relevantes
